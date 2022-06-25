@@ -21,14 +21,14 @@ class QuizView extends Component {
 
   componentDidMount() {
     $.ajax({
-      url: `/categories`, //TODO: update request URL
-      type: 'GET',
+      url: `/api/v1.0/categories`, //TODO: update request URL
+      type: "GET",
       success: (result) => {
         this.setState({ categories: result.categories });
         return;
       },
       error: (error) => {
-        alert('Unable to load categories. Please try your request again');
+        alert("Unable to load categories. Please try your request again");
         return;
       },
     });
@@ -49,10 +49,10 @@ class QuizView extends Component {
     }
 
     $.ajax({
-      url: '/quizzes', //TODO: update request URL
-      type: 'POST',
-      dataType: 'json',
-      contentType: 'application/json',
+      url: `/api/v1.0/quizzes`, //TODO: update request URL
+      type: "POST",
+      dataType: "json",
+      contentType: "application/json",
       data: JSON.stringify({
         previous_questions: previousQuestions,
         quiz_category: this.state.quizCategory,
@@ -66,13 +66,13 @@ class QuizView extends Component {
           showAnswer: false,
           previousQuestions: previousQuestions,
           currentQuestion: result.question,
-          guess: '',
+          guess: "",
           forceEnd: result.question ? false : true,
         });
         return;
       },
       error: (error) => {
-        alert('Unable to load question. Please try your request again');
+        alert("Unable to load quizzes. Please try your request again");
         return;
       },
     });
