@@ -5,6 +5,7 @@ from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import random
+from itsdangerous import NoneAlgorithm
 
 from sqlalchemy import null
 
@@ -234,44 +235,36 @@ def create_app(test_config=None):
     def play_quiz():
         body = request.get_json()
         previous_questions = body.get("previous_questions")
-        quiz_category = body.get("quiz_category", None)
+        quiz_category = body.get("quiz_category")
+        current_category_id = quiz_category.get("id")
+        category_all = "0"
+        questions = None
 
-        # # Validate user requests
-        # if 'previous_questions' in body and type(previous_questions) != list:
-        #         abort(400)
-        # if 'quiz_category' in body and  type(quiz_category) != str:
-        #         abort(400)
 
-        # Get the current category
-        current_category = Category.query.filter(Category.type == str(quiz_category))
-        formatted_categories = {cat.id: cat.type for cat in current_category}
+        if current_category_id == category_all:
+            questions = Question.query.all() 
+        else:
+            questions = Question.query.filter(Question.category == current_category_id).all()
 
-        if not len(formatted_categories) == 0: abort(400)
-        current_catgory_id = int(list(formatted_categories.keys())[0])
-
-        questions_in_category = Question.query.filter(Question.category == current_catgory_id).all()
-        formatted_questions =  [questions for questions in questions_in_category]
+        formatted_questions =  [category_questions for category_questions in questions]
         formatted_questions_ids = set([question.id for question in formatted_questions])
         previous_questions_ids = set(previous_questions)
 
-        fresh_question_in_category  = list(formatted_questions_ids - previous_questions_ids)
-        if len(fresh_question_in_category) == 0:
-            abort(404)
-    
-        next_question_id = random.choice(fresh_question_in_category)
-        next_question = Question.query.filter(Question.id == next_question_id).one_or_none()
+        if len(formatted_questions_ids) == 0:
+            return jsonify({
+                "success": True,
+                "question": None
+            })
+        else:
+            fresh_question_in_category  = list(formatted_questions_ids - previous_questions_ids)
+            next_question_id = random.choice(fresh_question_in_category)
+            next_question = Question.query.filter(Question.id == next_question_id).one_or_none()
 
-        return jsonify({
-            "question": next_question.format(),
-                # "question": {
-                #     "answer": "The Liver",
-                #     "category": 1,
-                #     "difficulty": 4,
-                #     "id": 20,
-                #     "question": "What is the heaviest organ in the human body?"
-                # },
-            "success": True
-        })
+            return jsonify({
+                "question": next_question.format(),
+                "success": True
+            })
+
     """
     @TODO:
     Create error handlers for all expected errors
